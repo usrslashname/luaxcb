@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_clean:
+	dh_auto_clean --builddirectory=build-py3 PYTHON=python3
+
+override_dh_auto_configure:
+	dh_auto_configure --builddirectory=build-py3 -- --libdir=/usr/lib PYTHON=python3
+
+override_dh_auto_build:
+	dh_auto_build --builddirectory=build-py3 PYTHON=python3
+
+override_dh_auto_install:
+	dh_auto_install --builddirectory=build-py3 PYTHON=python3

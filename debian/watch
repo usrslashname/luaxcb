@@ -1,0 +1,2 @@
+version=3
+https://xorg.freedesktop.org/releases/individual/proto/ xcb-proto-([0-9].*)\.tar\.gz

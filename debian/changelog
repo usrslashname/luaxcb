@@ -1,0 +1,5 @@
+xcb-proto (1.15.2-ok1) nile; urgency=medium
+
+  * Build for openKylin.
+
+ -- zhouganqing <zhouganqing@kylinos.cn>  Tue, 16 Apr 2024 19:31:44 +0800
