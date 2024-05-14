@@ -1,2 +1,2 @@
-version=3
-https://xorg.freedesktop.org/releases/individual/proto/ xcb-proto-([0-9].*)\.tar\.gz
+version=4
+opts=pgpsigurlmangle=s/$/.sig/,pgpmode=mangle https://xorg.freedesktop.org/releases/individual/proto/ xcb-proto-([0-9].*)\.tar\.gz
