@@ -6,11 +6,50 @@ For typedefs, eventcopies, xidtypes, and other aliases though,
 we do not create a new type object, we just record the existing one under a new name.
 ]]
 
+local lom = require("lxp.lom")
 local path = require("path")   -- optionally provide a path.join implementation; if not available, we use concatenation
 local state = require("xcbgen.state")
 local xtypes = require("xcbgen.xtypes")
 
 local matcher = {}
+
+-- Convert a lxp.lom node into the { tag, text, attr, children } shape
+local function normalize_lom_node(node)
+    if not node then return nil end
+    -- LOM returns text nodes as strings inside node; treat node.text and node.children uniformly
+    local out = {
+        tag = node.name,
+        attr = node.attr or {},
+        text = nil,
+        children = {}
+    }
+
+    if node.text and type(node.text) == "string" then
+        out.text = node.text
+    end
+
+    -- LOM represents mixed content as node[1], node[2], ...; node.children may also be used
+    local child_list = node.children or {}
+    -- if node itself exposes array-like children (some lom implementations put children directly at numeric keys)
+    for i = 1, #node do
+        table.insert(child_list, node[i])
+    end
+
+    for _, child in ipairs(child_list) do
+        if type(child) == "table" and child.name then
+            table.insert(out.children, normalize_lom_node(child))
+        elseif type(child) == "string" then
+            -- concatenate text nodes
+            if out.text then
+                out.text = out.text .. child
+            else
+                out.text = child
+            end
+        end
+    end
+
+    return out
+end
 
 -- Helper: concatenate namespace.prefix (array-like) with id, returning a new table
 local function concat_prefix(prefix, id)
@@ -171,7 +210,12 @@ matcher.funcs = {
 
 -- Execute: iterate over namespace.root children and dispatch
 function matcher.execute(module, namespace)
-    -- Expect namespace.root.children to be an array of elements
+    -- Normalize a lxp.lom root node if present
+    if namespace.root and namespace.root.name then
+        -- if Namespace.new already parsed file with lom.parsefile, normalize it now
+        namespace.root = normalize_lom_node(namespace.root)
+    end
+
     local children = namespace.root.children or {}
     for i = 1, #children do
         local elt = children[i]
@@ -179,7 +223,7 @@ function matcher.execute(module, namespace)
         if fn then
             fn(elt, module, namespace)
         else
-            -- Unknown tag: ignore or warn
+            -- Unknown tag: ignore or warn (optional)
             -- print(("matcher.execute: unknown tag %s"):format(tostring(elt.tag)))
         end
     end
